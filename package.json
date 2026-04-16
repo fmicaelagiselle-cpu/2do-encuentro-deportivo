@@ -1,14 +1,78 @@
-{
-  "name": "2do-encuentro-kids",
-  "private": true,
-  "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start"
-  },
-  "dependencies": {
-    "next": "14.2.0",
-    "react": "18.2.0",
-    "react-dom": "18.2.0"
-  }
+'use client'
+import { useState } from 'react'
+import { createClient } from '@supabase/supabase-js'
+
+const supabase = createClient(
+process.env.NEXT_PUBLIC_SUPABASE_URL,
+process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+)
+
+export default function Page() {
+const [form, setForm] = useState({
+nombre:'',
+apellido:'',
+edad:'',
+categoria:'',
+telefono:''
+})
+
+const [foto,setFoto] = useState(null)
+const [ok,setOk] = useState('')
+
+const enviar = async (e) => {
+e.preventDefault()
+
+if(!foto){
+alert('Debes subir una foto')
+return
+}
+
+const nombreArchivo = Date.now() + foto.name
+
+await supabase.storage
+.from('fotos-carnet')
+.upload(nombreArchivo, foto)
+
+const { data } = supabase.storage
+.from('fotos-carnet')
+.getPublicUrl(nombreArchivo)
+
+await supabase.from('inscriptos').insert([{
+...form,
+foto_url:data.publicUrl
+}])
+
+setOk('Inscripción enviada con éxito')
+}
+
+return (
+<div style={{padding:'30px',fontFamily:'Arial'}}>
+<h1>2do Encuentro Deportivo KIDS</h1>
+
+<form onSubmit={enviar}>
+<input placeholder="Nombre" required onChange={e=>setForm({...form,nombre:e.target.value})} /><br/><br/>
+<input placeholder="Apellido" required onChange={e=>setForm({...form,apellido:e.target.value})} /><br/><br/>
+<input placeholder="Edad" required onChange={e=>setForm({...form,edad:e.target.value})} /><br/><br/>
+
+<select required onChange={e=>setForm({...form,categoria:e.target.value})}>
+<option value="">Categoría</option>
+<option>B. punta amarilla</option>
+<option>Amarillo</option>
+<option>A. punta verde</option>
+<option>Verde</option>
+<option>V. punta azul</option>
+</select><br/><br/>
+
+<input placeholder="Teléfono" required onChange={e=>setForm({...form,telefono:e.target.value})} /><br/><br/>
+
+<label>Foto carnet:</label><br/>
+<input type="file" required onChange={e=>setFoto(e.target.files[0])} /><br/><br/>
+
+<button type="submit">Enviar inscripción</button>
+</form>
+
+<p>{ok}</p>
+
+</div>
+)
 }
