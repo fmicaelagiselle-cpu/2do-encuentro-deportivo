@@ -1,0 +1,1 @@
+export const metadata={title:'2do Encuentro Kids'};export default function RootLayout({children}){return <html><body style={{margin:0,fontFamily:'Arial, sans-serif'}}>{children}</body></html>}
